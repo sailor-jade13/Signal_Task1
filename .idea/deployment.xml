@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" serverName="duan@192.168.31.23:22 password">
+    <serverData>
+      <paths name="duan@192.168.31.23:22">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/duan/czy" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="duan@192.168.31.23:22 password">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/duan/czy" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="duan@cn-zz-bgp-1.natfrp.cloud:11943 password">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/duan/czy" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>
