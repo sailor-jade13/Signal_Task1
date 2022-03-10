@@ -1,6 +1,6 @@
 '''
 @Project ：Signal_Task 
-@File ：CNN_CNN.py
+@File ：wrong_test.py
 @IDE  ：PyCharm 
 @Author ：Jade
 @Date ：2022/3/2 10:06
@@ -122,9 +122,9 @@ class CNN2(nn.Module):
             # x1 = torch.squeeze(x1)
             # x2 = torch.squeeze(x2)
             ### 并联forward ###
-            output = torch.add(x1, x2)  # feature fusion
-            output = self.classifier(output)
-
+            x = torch.cat([x1, x2], dim=2)
+            # print(x.shape)
+            output = self.classifier(x.view(x.shape[0], -1))
             return output
 
 def train(net, train_loader, eval_loader, device, num_epochs):
@@ -279,7 +279,7 @@ if __name__ == '__main__':
     hidden_dim = 128
     layer_dim = 1
     output_dim = 8
-    net = CNN2(input_dim,hidden_dim,layer_dim,output_dim)
+    net = CNN2()
     print(net)
 
     batch_size = 64
