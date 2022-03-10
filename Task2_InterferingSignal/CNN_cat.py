@@ -5,6 +5,9 @@
 @Author ：Jade
 @Date ：2022/3/10 9:38 
 '''
+# import os
+# os.environ["CUDA_VISIBLE_DEVICES"] = '0'
+
 
 import torch
 import copy
@@ -239,38 +242,40 @@ def train(net, train_loader, eval_loader, device, num_epochs):
 
 #测试模型-画出混淆矩阵
 def plot_confusion_matrix(test_data,test_label,my_convnet):
-    test_data = test_data.float().to(device)
-    test_label = test_label.long().to(device)
-    my_convnet.eval()
-    output = my_convnet(test_data,test_data)
-    # 返回指定维度最大值的序号下标
-    pre_lab = torch.argmax(output, 1)
-    #test准确度
-    test_acc = accuracy_score(test_label.cpu(), pre_lab.cpu())
-    print(f"test_acc:{test_acc}")
-    conf_mat = confusion_matrix(test_label.cpu(), pre_lab.cpu())
-    df_cm = pd.DataFrame(conf_mat, index=signal_classes, columns=signal_classes)
-    heatmap = sns.heatmap(df_cm, annot=True, fmt="d", cmap="YlGnBu")
-    heatmap.yaxis.set_ticklabels(heatmap.yaxis.get_ticklabels(),
-                                 rotation=0, ha='right')
-    heatmap.xaxis.set_ticklabels(heatmap.xaxis.get_ticklabels(),
-                                 rotation=45, ha='right')
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
-    plt.show()
+    with torch.no_grad():
+        test_data = test_data.float().to(device)
+        test_label = test_label.long().to(device)
+        my_convnet.eval()
+        output = my_convnet(test_data,test_data)
+        # 返回指定维度最大值的序号下标
+        pre_lab = torch.argmax(output, 1)
+        #test准确度
+        test_acc = accuracy_score(test_label.cpu(), pre_lab.cpu())
+        print(f"test_acc:{test_acc}")
+        conf_mat = confusion_matrix(test_label.cpu(), pre_lab.cpu())
+        df_cm = pd.DataFrame(conf_mat, index=signal_classes, columns=signal_classes)
+        heatmap = sns.heatmap(df_cm, annot=True, fmt="d", cmap="YlGnBu")
+        heatmap.yaxis.set_ticklabels(heatmap.yaxis.get_ticklabels(),
+                                     rotation=0, ha='right')
+        heatmap.xaxis.set_ticklabels(heatmap.xaxis.get_ticklabels(),
+                                     rotation=45, ha='right')
+        plt.ylabel('True label')
+        plt.xlabel('Predicted label')
+        plt.show()
 
 #平均测试准确度
 def test_accuracy(test_data,test_label,my_convnet):
-    test_data = test_data.float().to(device)
-    test_label = test_label.long().to(device)
-    my_convnet.eval()
-    output = my_convnet(test_data)
-    # 返回指定维度最大值的序号下标
-    pre_lab = torch.argmax(output, 1)
-    # test准确度
-    test_acc = accuracy_score(test_label.cpu(), pre_lab.cpu())
-    print(f"test_acc:{test_acc}")
-    return test_acc
+    with torch.no_grad():
+        test_data = test_data.float().to(device)
+        test_label = test_label.long().to(device)
+        my_convnet.eval()
+        output = my_convnet(test_data)
+        # 返回指定维度最大值的序号下标
+        pre_lab = torch.argmax(output, 1)
+        # test准确度
+        test_acc = accuracy_score(test_label.cpu(), pre_lab.cpu())
+        print(f"test_acc:{test_acc}")
+        return test_acc
 
 # 不同干扰信号测试准确度
 def evaluate_accuracy(test_data,test_label, my_convnet, device=None):
@@ -312,10 +317,12 @@ if __name__ == '__main__':
     #图1-混淆矩阵
     #加载数据
     #将train数据集分为验证集和训练集
-    train_loader, eval_loader= load_train_data(batch_size,train_path,13)
-    test_data,test_label = load_test_data(batch_size,test_path,13)
+    train_loader, eval_loader= load_train_data(batch_size,train_path,4)
+    test_data,test_label = load_test_data(batch_size,test_path,4)
     # #训练模型
     my_convnet,train_process = train(net, train_loader, eval_loader,device, num_epochs)
+    if hasattr(torch.cuda, 'empty_cache'):
+        torch.cuda.empty_cache()
     # # #测试模型-画出混淆矩阵
     plot_confusion_matrix(test_data,test_label,my_convnet)
     if hasattr(torch.cuda, 'empty_cache'):
