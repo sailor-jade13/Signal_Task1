@@ -34,7 +34,7 @@ def load_train_data(batch_size,path_train,snr):
     train_data = torch.unsqueeze(train_data, dim=2)
     eval_data = torch.unsqueeze(eval_data, dim=2)
     print("train_data.shape:",train_data.shape)  #(26248,1,1,64) - 300000/64*8*0.7
-    print("eval_data.shape:", eval_data.shape)   #(2400,1,1,64) - 300000/64*8*0.3
+    print("eval_data.shape:", eval_data.shape)   #(11248,1,1,64) - 300000/64*8*0.3
 
     #将数据类型转化为torch网络需要的数据类型
     #并转化为张量
@@ -285,38 +285,38 @@ if __name__ == '__main__':
     #图1-混淆矩阵
     #加载数据
     #将train数据集分为验证集和训练集
-    # train_loader, eval_loader= load_train_data(batch_size,train_path,13)
-    # test_data,test_label = load_test_data(batch_size,test_path,13)
-    # #训练模型
-    # my_convnet,train_process = train(net, train_loader, eval_loader,device, num_epochs)
-    # # #测试模型-画出混淆矩阵
-    # plot_confusion_matrix(test_data,test_label,my_convnet)
-    # if hasattr(torch.cuda, 'empty_cache'):
-    #     torch.cuda.empty_cache()
+    train_loader, eval_loader= load_train_data(batch_size,train_path,13)
+    test_data,test_label = load_test_data(batch_size,test_path,13)
+    #训练模型
+    my_convnet,train_process = train(net, train_loader, eval_loader,device, num_epochs)
+    # #测试模型-画出混淆矩阵
+    plot_confusion_matrix(test_data,test_label,my_convnet)
+    if hasattr(torch.cuda, 'empty_cache'):
+        torch.cuda.empty_cache()
 
     # 图2-平均准确度曲线
     # 横坐标—干信比 纵坐标-平均识别准确度
-    test_acc_all = []
-    JSR = [-8,-6,-4,-2,0,2,4,6,8,10,12,14,16,18]
-    for i in range(0,14):
-        train_loader, eval_loader= load_train_data(batch_size,train_path,i)
-        test_data,test_label = load_test_data(batch_size,test_path,i)
-        #训练模型
-        my_convnet,train_process = train(net, train_loader, eval_loader,device, num_epochs)
-        #测试准确度
-        test_acc = test_accuracy(test_data,test_label,my_convnet)
-        test_acc_all.append(test_acc)
-        print(test_acc_all)
-    plt.figure()
-    plt.plot(JSR,test_acc_all, "ro-",label="Test acc")
-    plt.legend(bbox_to_anchor=(1.00,0.1))
-    #加网格线
-    plt.grid()
-    plt.ylim(0.0, 1.1)
-    plt.xlabel("JSR")
-    plt.ylabel("Accuracy")
-    plt.title("Average Classification Accuracy")
-    plt.show()
+    # test_acc_all = []
+    # JSR = [-8,-6,-4,-2,0,2,4,6,8,10,12,14,16,18]
+    # for i in range(0,14):
+    #     train_loader, eval_loader= load_train_data(batch_size,train_path,i)
+    #     test_data,test_label = load_test_data(batch_size,test_path,i)
+    #     #训练模型
+    #     my_convnet,train_process = train(net, train_loader, eval_loader,device, num_epochs)
+    #     #测试准确度
+    #     test_acc = test_accuracy(test_data,test_label,my_convnet)
+    #     test_acc_all.append(test_acc)
+    #     print(test_acc_all)
+    # plt.figure()
+    # plt.plot(JSR,test_acc_all, "ro-",label="Test acc")
+    # plt.legend(bbox_to_anchor=(1.00,0.1))
+    # #加网格线
+    # plt.grid()
+    # plt.ylim(0.0, 1.1)
+    # plt.xlabel("JSR")
+    # plt.ylabel("Accuracy")
+    # plt.title("Average Classification Accuracy")
+    # plt.show()
 
     # 图3-各自准确度曲线
     # 横坐标—干信比 纵坐标-平均识别准确度

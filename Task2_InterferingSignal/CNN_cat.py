@@ -1,9 +1,9 @@
 '''
 @Project ：Signal_Task 
 @File ：CNN_cat.py
-@IDE  ：PyCharm
+@IDE  ：PyCharm 
 @Author ：Jade
-@Date ：2022/3/10 9:38
+@Date ：2022/3/10 9:38 
 '''
 
 import torch
@@ -127,7 +127,7 @@ class CNN_cat(nn.Module):
         )
         #1层全连接
         self.fc = nn.Sequential(
-            nn.Linear(832,128),
+            nn.Linear(2*16*1*52,128),
             nn.PReLU(),
             # nn.Dropout(0.5)
             nn.Linear(128,64),
@@ -142,10 +142,10 @@ class CNN_cat(nn.Module):
     def forward(self, x1,x2):
         x1 = self.conv1(x1)
         x2 = self.conv2(x2)
-        print(x1.shape)
-        print(x2.shape)
+        # print(x1.shape)
+        # print(x2.shape)
         x = torch.cat([x1, x2], dim=2)
-        print(x.shape)
+        # print(x.shape)
         output = self.fc(x.view(x.shape[0], -1))
         return output
 
@@ -242,7 +242,7 @@ def plot_confusion_matrix(test_data,test_label,my_convnet):
     test_data = test_data.float().to(device)
     test_label = test_label.long().to(device)
     my_convnet.eval()
-    output = my_convnet(test_data)
+    output = my_convnet(test_data,test_data)
     # 返回指定维度最大值的序号下标
     pre_lab = torch.argmax(output, 1)
     #test准确度
@@ -302,7 +302,7 @@ if __name__ == '__main__':
     layer_dim = 1
     output_dim = 8
     net = CNN_cat()
-    # print(net)
+    print(net)
 
     batch_size = 64
     train_path = "../dataset/Task2_dataset/train"
@@ -312,12 +312,79 @@ if __name__ == '__main__':
     #图1-混淆矩阵
     #加载数据
     #将train数据集分为验证集和训练集
-    train_loader, eval_loader= load_train_data(batch_size,train_path,10)
-    test_data,test_label = load_test_data(batch_size,test_path,10)
+    train_loader, eval_loader= load_train_data(batch_size,train_path,13)
+    test_data,test_label = load_test_data(batch_size,test_path,13)
     # #训练模型
     my_convnet,train_process = train(net, train_loader, eval_loader,device, num_epochs)
     # # #测试模型-画出混淆矩阵
-    # plot_confusion_matrix(test_data,test_label,my_convnet)
+    plot_confusion_matrix(test_data,test_label,my_convnet)
     if hasattr(torch.cuda, 'empty_cache'):
         torch.cuda.empty_cache()
 
+    # 图2-平均准确度曲线
+    # 横坐标—干信比 纵坐标-平均识别准确度
+    # test_acc_all = []
+    # JSR = [-8,-6,-4,-2,0,2,4,6,8,10,12,14,16,18]
+    # for i in range(0,14):
+    #     print(f"SNR:{-8+i*2}")
+    #     train_loader, eval_loader= load_train_data(batch_size,train_path,i)
+    #     test_data,test_label = load_test_data(batch_size,test_path,i)
+    #     #训练模型
+    #     my_convnet,train_process = train(net, train_loader, eval_loader,device, num_epochs)
+    #     #测试准确度
+    #     test_acc = test_accuracy(test_data,test_label,my_convnet)
+    #     test_acc_all.append(test_acc)
+    #     print(test_acc_all)
+    #     if hasattr(torch.cuda, 'empty_cache'):
+    #         torch.cuda.empty_cache()
+    # plt.figure()
+    # plt.plot(JSR,test_acc_all, "ro-",label="Test acc")
+    # plt.legend(bbox_to_anchor=(1.00,0.1))
+    # #加网格线
+    # plt.grid()
+    # plt.ylim(0.0, 1.1)
+    # plt.xlabel("JSR")
+    # plt.ylabel("Accuracy")
+    # plt.title("Average Classification Accuracy")
+    # plt.show()
+
+    # 图3-各自准确度曲线
+    # 横坐标—干信比 纵坐标-平均识别准确度
+    # test_acc_cwi = []
+    # test_acc_scwi = []
+    # test_acc_lfmi = []
+    # test_acc_pi = []
+    # test_acc_nbi = []
+    # test_acc_wbi = []
+    # test_acc_csi = []
+    # JSR = [-8,-6,-4,-2,0,2,4,6,8,10,12,14,16,18]
+    # for i in range(0,14):
+    #     train_loader, eval_loader= load_train_data(batch_size,train_path,i)
+    #     test_data,test_label = load_test_data(batch_size,test_path,i)
+    #     #训练模型
+    #     my_convnet,train_process = train(net, train_loader, eval_loader,device, num_epochs)
+    #     #测试准确度
+    #     cwi_acc,scwi_acc,lfmi_acc,pi_acc,nbi_acc,wbi_acc,csi_acc = evaluate_accuracy(test_data,test_label,my_convnet)
+    #     test_acc_cwi.append(cwi_acc)
+    #     test_acc_scwi.append(scwi_acc)
+    #     test_acc_lfmi.append(lfmi_acc)
+    #     test_acc_pi.append(pi_acc)
+    #     test_acc_nbi.append(nbi_acc)
+    #     test_acc_wbi.append(wbi_acc)
+    #     test_acc_csi.append(csi_acc)
+    # plt.figure()
+    # plt.plot(JSR,test_acc_cwi, "bo-",label="CWI")
+    # plt.plot(JSR, test_acc_scwi, "m.-", label="SCWI")
+    # plt.plot(JSR, test_acc_lfmi, "g*-", label="LFMI")
+    # plt.plot(JSR,test_acc_pi, "y--",label="PI")
+    # plt.plot(JSR, test_acc_nbi, "r:", label="NBI")
+    # plt.plot(JSR, test_acc_wbi, "k>", label="WBI")
+    # plt.plot(JSR, test_acc_csi, "c^", label="CSI")
+    # plt.legend(bbox_to_anchor=(0.9,0.5))
+    # #加网格线
+    # plt.grid()
+    # plt.ylim(0.0, 1.1)
+    # plt.xlabel("JSR")
+    # plt.ylabel("Accuracy")
+    # plt.title("Average Classification Accuracy")
+    # plt.show()
