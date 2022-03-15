@@ -4,5 +4,6 @@
     <content url="file://$MODULE_DIR$" />
     <orderEntry type="jdk" jdkName="Remote Python 3.8.8 (sftp://duan@192.168.31.23:22/home/duan/anaconda3/envs/pytorch/bin/python3.8)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="d2l-zh" />
   </component>
 </module>

@@ -1,14 +1,13 @@
+# coding=utf-8
 '''
-@Project ：Signal_Task 
-@File ：CNN_cat.py
-@IDE  ：PyCharm 
+@Project ：Signal_Task
+@File ：RNN.py
+@IDE  ：PyCharm
 @Author ：Jade
-@Date ：2022/3/10 9:38 
+@Date ：2021/2/16 16:32
+
+RNN为三维数组
 '''
-# import os
-# os.environ["CUDA_VISIBLE_DEVICES"] = '0'
-
-
 import torch
 import copy
 import seaborn as sns
@@ -34,8 +33,6 @@ def load_train_data(batch_size,path_train,snr):
     train_data, train_label, eval_data, eval_label = load_train_data_from_mat(path_train,snr)
     train_data = torch.unsqueeze(torch.from_numpy(train_data),dim=1)
     eval_data = torch.unsqueeze(torch.from_numpy(eval_data), dim=1)
-    train_data = torch.unsqueeze(train_data, dim=2)
-    eval_data = torch.unsqueeze(eval_data, dim=2)
     print("train_data.shape:",train_data.shape)  #(26248,1,1,64) - 300000/64*8*0.7
     print("eval_data.shape:", eval_data.shape)   #(2400,1,1,64) - 300000/64*8*0.3
 
@@ -68,7 +65,7 @@ def load_train_data(batch_size,path_train,snr):
 def load_test_data(batch_size,path_test,snr):
     test_data, test_label = load_test_data_from_mat(path_test,snr)
     test_data = torch.unsqueeze(torch.from_numpy(test_data), dim=1)
-    test_data = torch.unsqueeze(test_data, dim=2)
+    # test_data = torch.unsqueeze(test_data, dim=2)
     print("test_data.shape:", test_data.shape)  # (11248,1,1,64)
 
     #将数据类型转化为torch网络需要的数据类型
@@ -86,70 +83,28 @@ def load_test_data(batch_size,path_test,snr):
     return test_data,test_label
 
 #网络参数初始化
-class CNN_cat(nn.Module):
-    def __init__(self):
-        super(CNN_cat, self).__init__()
-        #2层CNN
-        self.conv1 = nn.Sequential(
-            # 在BN层之前将conv2d的偏置bias设置为false
-            nn.Conv2d(1, 128, (1, 3), 1,bias=False),
-            #BN层输入通道数应与前一层Conv2d的输出通道数一致
-            nn.BatchNorm2d(128),
-            nn.PReLU(),
-            # nn.Dropout(0.5),
-            # 在BN层之前将conv2d的偏置bias设置为false
-            nn.Conv2d(128, 64, (1, 5), stride=1, padding=(0, 1),bias=False),
-            nn.BatchNorm2d(64),
-            nn.PReLU(),
-            # nn.Dropout(0.5)
-            nn.Conv2d(64, 32, (1, 7), stride=1, padding=(0, 1), bias=False),
-            nn.BatchNorm2d(32),
-            nn.PReLU(),
-            nn.Conv2d(32, 16, (1, 7), stride=1, padding=(0, 1), bias=False),
-            nn.BatchNorm2d(16),
-            nn.PReLU(),
-        )
-        self.conv2 = nn.Sequential(
-            # 在BN层之前将conv2d的偏置bias设置为false
-            nn.Conv2d(1, 128, (1, 3), 1, bias=False),
-            # BN层输入通道数应与前一层Conv2d的输出通道数一致
-            nn.BatchNorm2d(128),
-            nn.PReLU(),
-            # nn.Dropout(0.5),
-            # 在BN层之前将conv2d的偏置bias设置为false
-            nn.Conv2d(128, 64, (1, 5), stride=1, padding=(0, 1), bias=False),
-            nn.BatchNorm2d(64),
-            nn.PReLU(),
-            # nn.Dropout(0.5)
-            nn.Conv2d(64, 32, (1, 7), stride=1, padding=(0, 1), bias=False),
-            nn.BatchNorm2d(32),
-            nn.PReLU(),
-            nn.Conv2d(32, 16, (1, 7), stride=1, padding=(0, 1), bias=False),
-            nn.BatchNorm2d(16),
-            nn.PReLU(),
-        )
-        #1层全连接
-        self.fc = nn.Sequential(
-            nn.Linear(2*16*1*52,128),
-            nn.PReLU(),
-            # nn.Dropout(0.5)
-            nn.Linear(128,64),
-            #nn. Dropout(0.5)
-            nn. PReLU(),
-            nn.Linear(64,8),
-            nn.PReLU(),
-            # train中的损失函数CrossEntropyLoss包括了softmax + log + NLLLoss
-            # 所以不需要softmax
-            # nn.Softmax(dim=1)
-        )
-    def forward(self, x1,x2):
-        x1 = self.conv1(x1)
-        x2 = self.conv2(x2)
-        # print(x1.shape)
-        # print(x2.shape)
-        x = torch.cat([x1, x2], dim=2)
-        # print(x.shape)
-        output = self.fc(x.view(x.shape[0], -1))
+class RNN(nn.Module):
+    def __init__(self,input_dim,hidden_dim,layer_dim,output_dim):
+        """
+        :param input_dim: 输入数据的维度
+        :param hidden_dim: RNN神经元个数
+        :param layer_dim: RNN的层数
+        :param output_dim: 隐藏层输出的维度（分类的数量）
+        """
+        super(RNN, self).__init__()
+        self.hidden_dim = hidden_dim ##RNN神经元个数
+        self.layer_dim = layer_dim ##RNN的层数
+        ## RNN
+        self.rnn = nn.RNN(input_dim,hidden_dim,layer_dim,batch_first=True,nonlinearity='relu')
+        #全连接
+        self.fc1 = nn.Linear(hidden_dim,output_dim)
+    def forward(self, x):
+        ## x:[batch,time_ste,input_dim]
+        ## out:[batch,time_step,input_dim]
+        ## h_n:[layer_dim,batch,hidden_dim]
+        out,h_n = self.rnn(x,None) ## None表示h0会使用全0进行初始化
+        ## 选取最后一个时间点的output作为输出
+        output = self.fc1(out[:,-1,:])
         return output
 
 def train(net, train_loader, eval_loader, device, num_epochs):
@@ -184,7 +139,7 @@ def train(net, train_loader, eval_loader, device, num_epochs):
             #分类问题中，pytorch默认的预测标签是64位有符号整型数据
             b_y = b_y.long().to(device)
             net.train()
-            output = net(b_x,b_x)
+            output = net(b_x)
             pre_lab = torch.argmax(output,1)
             l = loss(output, b_y)
             optimizer.zero_grad()
@@ -201,7 +156,7 @@ def train(net, train_loader, eval_loader, device, num_epochs):
             # 分类问题中，pytorch默认的预测标签是64位有符号整型数据
             b_y = b_y.long().to(device)
             net.eval()
-            output = net(b_x,b_x)
+            output = net(b_x)
             pre_lab = torch.argmax(output, 1)
             l = loss(output, b_y)
             eval_loss += l.cpu().item() * b_x.size(0)
@@ -242,40 +197,38 @@ def train(net, train_loader, eval_loader, device, num_epochs):
 
 #测试模型-画出混淆矩阵
 def plot_confusion_matrix(test_data,test_label,my_convnet):
-    with torch.no_grad():
-        test_data = test_data.float().to(device)
-        test_label = test_label.long().to(device)
-        my_convnet.eval()
-        output = my_convnet(test_data,test_data)
-        # 返回指定维度最大值的序号下标
-        pre_lab = torch.argmax(output, 1)
-        #test准确度
-        test_acc = accuracy_score(test_label.cpu(), pre_lab.cpu())
-        print(f"test_acc:{test_acc}")
-        conf_mat = confusion_matrix(test_label.cpu(), pre_lab.cpu())
-        df_cm = pd.DataFrame(conf_mat, index=signal_classes, columns=signal_classes)
-        heatmap = sns.heatmap(df_cm, annot=True, fmt="d", cmap="YlGnBu")
-        heatmap.yaxis.set_ticklabels(heatmap.yaxis.get_ticklabels(),
-                                     rotation=0, ha='right')
-        heatmap.xaxis.set_ticklabels(heatmap.xaxis.get_ticklabels(),
-                                     rotation=45, ha='right')
-        plt.ylabel('True label')
-        plt.xlabel('Predicted label')
-        plt.show()
+    test_data = test_data.float().to(device)
+    test_label = test_label.long().to(device)
+    my_convnet.eval()
+    output = my_convnet(test_data)
+    # 返回指定维度最大值的序号下标
+    pre_lab = torch.argmax(output, 1)
+    #test准确度
+    test_acc = accuracy_score(test_label.cpu(), pre_lab.cpu())
+    print(f"test_acc:{test_acc}")
+    conf_mat = confusion_matrix(test_label.cpu(), pre_lab.cpu())
+    df_cm = pd.DataFrame(conf_mat, index=signal_classes, columns=signal_classes)
+    heatmap = sns.heatmap(df_cm, annot=True, fmt="d", cmap="YlGnBu")
+    heatmap.yaxis.set_ticklabels(heatmap.yaxis.get_ticklabels(),
+                                 rotation=0, ha='right')
+    heatmap.xaxis.set_ticklabels(heatmap.xaxis.get_ticklabels(),
+                                 rotation=45, ha='right')
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    plt.show()
 
 #平均测试准确度
 def test_accuracy(test_data,test_label,my_convnet):
-    with torch.no_grad():
-        test_data = test_data.float().to(device)
-        test_label = test_label.long().to(device)
-        my_convnet.eval()
-        output = my_convnet(test_data,test_data)
-        # 返回指定维度最大值的序号下标
-        pre_lab = torch.argmax(output, 1)
-        # test准确度
-        test_acc = accuracy_score(test_label.cpu(), pre_lab.cpu())
-        print(f"test_acc:{test_acc}")
-        return test_acc
+    test_data = test_data.float().to(device)
+    test_label = test_label.long().to(device)
+    my_convnet.eval()
+    output = my_convnet(test_data)
+    # 返回指定维度最大值的序号下标
+    pre_lab = torch.argmax(output, 1)
+    # test准确度
+    test_acc = accuracy_score(test_label.cpu(), pre_lab.cpu())
+    print(f"test_acc:{test_acc}")
+    return test_acc
 
 # 不同干扰信号测试准确度
 def evaluate_accuracy(test_data,test_label, my_convnet, device=None):
@@ -302,27 +255,25 @@ def evaluate_accuracy(test_data,test_label, my_convnet, device=None):
     return acc_cwi/n,acc_scwi/n,acc_lfmi/n,acc_pi/n,acc_nbi/n,acc_wbi/n,acc_csi/n
 
 if __name__ == '__main__':
-    input_dim = 60
+    input_dim = 64
     hidden_dim = 128
-    layer_dim = 1
+    layer_dim = 2
     output_dim = 8
-    net = CNN_cat()
+    net = RNN(input_dim,hidden_dim,layer_dim,output_dim)
     print(net)
 
     batch_size = 64
-    train_path = "../dataset/Task2_dataset/train"
-    test_path = "../dataset/Task2_dataset/test"
+    train_path = "../../dataset/Task2_dataset/train"
+    test_path = "../../dataset/Task2_dataset/test"
     num_epochs = 40
 
     #图1-混淆矩阵
     #加载数据
     #将train数据集分为验证集和训练集
-    # train_loader, eval_loader= load_train_data(batch_size,train_path,4)
-    # test_data,test_label = load_test_data(batch_size,test_path,4)
+    # train_loader, eval_loader= load_train_data(batch_size,train_path,0)
+    # test_data,test_label = load_test_data(batch_size,test_path,0)
     # # #训练模型
     # my_convnet,train_process = train(net, train_loader, eval_loader,device, num_epochs)
-    # if hasattr(torch.cuda, 'empty_cache'):
-    #     torch.cuda.empty_cache()
     # # # #测试模型-画出混淆矩阵
     # plot_confusion_matrix(test_data,test_label,my_convnet)
     # if hasattr(torch.cuda, 'empty_cache'):
@@ -333,7 +284,6 @@ if __name__ == '__main__':
     test_acc_all = []
     JSR = [-8,-6,-4,-2,0,2,4,6,8,10,12,14,16,18]
     for i in range(0,14):
-        print(f"SNR:{-8+i*2}")
         train_loader, eval_loader= load_train_data(batch_size,train_path,i)
         test_data,test_label = load_test_data(batch_size,test_path,i)
         #训练模型
@@ -341,9 +291,6 @@ if __name__ == '__main__':
         #测试准确度
         test_acc = test_accuracy(test_data,test_label,my_convnet)
         test_acc_all.append(test_acc)
-        print(test_acc_all)
-        if hasattr(torch.cuda, 'empty_cache'):
-            torch.cuda.empty_cache()
     plt.figure()
     plt.plot(JSR,test_acc_all, "ro-",label="Test acc")
     plt.legend(bbox_to_anchor=(1.00,0.1))
@@ -395,3 +342,4 @@ if __name__ == '__main__':
     # plt.ylabel("Accuracy")
     # plt.title("Average Classification Accuracy")
     # plt.show()
+
