@@ -132,7 +132,7 @@ def train(net, train_loader, test_loader, batch_size, device, num_epochs):
         plt.figure()
         plt.plot(test_acc_all, "r-")
         plt.ylim(0.0,1.1)
-        plt.title("Test acc per epoch")
+        plt.title("process acc per epoch")
         plt.show()
 
 if __name__ == '__main__':

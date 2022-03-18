@@ -152,7 +152,7 @@ def train(net, train_loader, eval_loader, device, num_epochs):
         plt.figure()
         plt.plot(eval_acc_all, "r-")
         plt.ylim(0.0, 1.1)
-        plt.title("Test acc per epoch")
+        plt.title("process acc per epoch")
         plt.show()
 
 def evaluate_accuracy(data_iter, net, device=None):

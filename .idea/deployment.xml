@@ -12,7 +12,7 @@
       <paths name="duan@192.168.31.23:22 password">
         <serverdata>
           <mappings>
-            <mapping deploy="/home/duan/czy" local="$PROJECT_DIR$" />
+            <mapping deploy="/home/duan/czy/Signal_Task" local="$PROJECT_DIR$" />
           </mappings>
         </serverdata>
       </paths>

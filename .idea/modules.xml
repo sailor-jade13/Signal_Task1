@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Signal_Task.iml" filepath="$PROJECT_DIR$/.idea/Signal_Task.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../d2l-zh/.idea/d2l-zh.iml" filepath="$PROJECT_DIR$/../d2l-zh/.idea/d2l-zh.iml" />
     </modules>
   </component>
 </project>
