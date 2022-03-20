@@ -99,7 +99,7 @@ def train(net, train_loader, eval_loader, device, num_epochs):
     eval_loss_all = []
     eval_acc_all = []
     for epoch in range(num_epochs):
-        print('Epoch{}/{}'.format(epoch,num_epochs-1))
+        print('Epoch{}/{}'.format(epoch+1,num_epochs))
         print('-'*20)
         # 每个epoch都分为两个阶段：train和eval
         # #只计算train_loss是无意义的，需对比eval_loss与train_loss
